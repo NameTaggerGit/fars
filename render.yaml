@@ -3,7 +3,7 @@ services:
     name: fars-api
     runtime: node
     plan: free
-    buildCommand: npm install && npx @nestjs/cli build && npx prisma generate && npx prisma migrate deploy
+    buildCommand: npm install && npx @nestjs/cli build && cd apps/api && npx prisma generate && npx prisma migrate deploy
     startCommand: npm run start:api
     envVars:
       - key: NODE_ENV
