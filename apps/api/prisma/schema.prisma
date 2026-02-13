@@ -1,0 +1,296 @@
+// FARS Messenger — Prisma Schema
+// PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  moderator
+  admin
+}
+
+enum FriendshipStatus {
+  pending
+  accepted
+  blocked
+}
+
+enum ChatType {
+  private
+  group
+}
+
+enum MemberRole {
+  member
+  admin
+}
+
+enum MessageType {
+  text
+  image
+  video
+  document
+  voice
+  sticker
+}
+
+enum MessageStatus {
+  sending
+  sent
+  read
+  error
+}
+
+enum ModerationAction {
+  mute
+  unmute
+  ban
+  unban
+  view_media
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  name           String
+  username       String    @unique // @tag
+  avatarUrl      String?
+  dateOfBirth    DateTime? @db.Date
+  bio            String?   @db.Text
+  nameColor      String?   // hex или название цвета
+  role           Role      @default(user)
+  emailVerifiedAt DateTime?
+  isBanned       Boolean   @default(false)
+  bannedUntil    DateTime?
+  muteUntil      DateTime?
+  lastActiveAt   DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  refreshTokens    RefreshToken[]
+  adminWhitelist   AdminWhitelist?      // если в белом списке — одна запись
+  addedToWhitelist AdminWhitelist[]    @relation("AddedBy")
+  friendshipsInitiated Friendship[]   @relation("FriendshipInitiator")
+  friendshipsReceived Friendship[]     @relation("FriendshipReceiver")
+  chatsCreated    Chat[]               @relation("ChatCreatedBy")
+  chatMemberships ChatMember[]
+  messagesSent    Message[]
+  messageReactions MessageReaction[]
+  messageReads    MessageRead[]
+  stickerPacksCreated StickerPack[]
+  userStickerPacks UserStickerPack[]
+  moderatorLogs   ModeratorLog[]       @relation("Moderator")
+  moderatorLogsTarget ModeratorLog[]   @relation("TargetUser")
+  verificationTokens VerificationToken[]
+
+  @@index([email])
+  @@index([username])
+  @@index([role])
+}
+
+model AdminWhitelist {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addedById String
+  addedBy   User     @relation("AddedBy", fields: [addedById], references: [id])
+  addedAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  type      String    // "email" | "password_reset"
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, type])
+  @@index([tokenHash])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+// Дружба: одна запись на пару (initiatorId < receiverId для консистентности можно хранить упорядоченно)
+model Friendship {
+  id           String           @id @default(cuid())
+  initiatorId  String
+  receiverId   String
+  status       FriendshipStatus @default(pending)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  initiator User @relation("FriendshipInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  receiver  User @relation("FriendshipReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([initiatorId, receiverId])
+  @@index([initiatorId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+model Chat {
+  id             String    @id @default(cuid())
+  type           ChatType
+  name           String?
+  avatarUrl      String?
+  backgroundUrl  String?
+  mutedUntil     DateTime?
+  pinnedAt       DateTime?
+  createdById   String
+  createdBy     User      @relation("ChatCreatedBy", fields: [createdById], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  members   ChatMember[]
+  messages  Message[]
+}
+
+model ChatMember {
+  id        String    @id @default(cuid())
+  chatId    String
+  chat      Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      MemberRole @default(member)
+  joinedAt  DateTime  @default(now())
+
+  @@unique([chatId, userId])
+  @@index([chatId])
+  @@index([userId])
+}
+
+model Message {
+  id         String        @id @default(cuid())
+  chatId     String
+  chat       Chat          @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content    String        @db.Text
+  type       MessageType   @default(text)
+  replyToId  String?
+  replyTo    Message?      @relation("ReplyTo", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies    Message[]     @relation("ReplyTo")
+  status     MessageStatus @default(sending)
+  metadata   Json?         // duration, size, width, height etc.
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime?
+
+  reactions   MessageReaction[]
+  readBy      MessageRead[]
+  attachments Attachment[]
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+}
+
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt    DateTime @default(now())
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  url       String   // S3 path or full URL
+  mimeType  String
+  filename  String?
+  size      Int?     // bytes
+  createdAt DateTime @default(now())
+
+  @@index([messageId])
+}
+
+model StickerPack {
+  id          String   @id @default(cuid())
+  name        String
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  stickers Sticker[]
+  users    UserStickerPack[]
+}
+
+model Sticker {
+  id            String     @id @default(cuid())
+  stickerPackId String
+  stickerPack   StickerPack @relation(fields: [stickerPackId], references: [id], onDelete: Cascade)
+  url           String
+  emoji         String?    // подсказка
+  order         Int        @default(0)
+  createdAt     DateTime   @default(now())
+
+  @@index([stickerPackId])
+}
+
+model UserStickerPack {
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stickerPackId String
+  stickerPack   StickerPack @relation(fields: [stickerPackId], references: [id], onDelete: Cascade)
+  addedAt       DateTime    @default(now())
+
+  @@id([userId, stickerPackId])
+  @@index([userId])
+}
+
+model ModeratorLog {
+  id            String           @id @default(cuid())
+  moderatorId   String
+  moderator     User             @relation("Moderator", fields: [moderatorId], references: [id], onDelete: Cascade)
+  targetUserId  String
+  targetUser    User             @relation("TargetUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+  action        ModerationAction
+  details       Json?            // duration, reason, etc.
+  createdAt     DateTime         @default(now())
+
+  @@index([moderatorId])
+  @@index([targetUserId])
+  @@index([createdAt])
+}

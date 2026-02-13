@@ -1,0 +1,23 @@
+{
+  "name": "fars",
+  "private": true,
+  "description": "FARS Messenger — monorepo",
+  "scripts": {
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build:api": "npm run build --workspace=apps/api",
+    "build:web": "npm run build --workspace=apps/web",
+    "start:api": "npm run start:prod --workspace=apps/api",
+    "start:web": "npm run preview --workspace=apps/web",
+    "install:all": "npm install && npm install --workspace=apps/api && npm install --workspace=apps/web",
+    "prisma:generate": "npm run prisma:generate --workspace=apps/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=apps/api",
+    "seed": "npm run seed --workspace=apps/api"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

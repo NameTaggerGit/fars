@@ -1,0 +1,147 @@
+/* Message Status Animations - Enhanced */
+@keyframes messagePulsing {
+  0%, 100% {
+    box-shadow: 
+      0 0 16px rgba(156, 163, 175, 0.4),
+      inset 0 0 20px rgba(156, 163, 175, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.06);
+    border-color: rgba(156, 163, 175, 0.6);
+  }
+  50% {
+    box-shadow: 
+      0 0 24px rgba(156, 163, 175, 0.5),
+      inset 0 0 25px rgba(156, 163, 175, 0.15),
+      0 12px 40px rgba(156, 163, 175, 0.1);
+    border-color: rgba(156, 163, 175, 0.75);
+  }
+}
+
+@keyframes messageSent {
+  0% {
+    box-shadow: 
+      0 0 0 0 rgba(59, 130, 246, 0.4),
+      inset 0 0 15px rgba(59, 130, 246, 0.05);
+  }
+  100% {
+    box-shadow: 
+      0 0 12px rgba(59, 130, 246, 0.3),
+      inset 0 0 15px rgba(59, 130, 246, 0.05),
+      0 8px 32px rgba(59, 130, 246, 0.1);
+  }
+}
+
+@keyframes messageRead {
+  0% {
+    box-shadow: 
+      0 0 0 0 rgba(34, 197, 94, 0.4),
+      inset 0 0 15px rgba(34, 197, 94, 0.05);
+  }
+  100% {
+    box-shadow: 
+      0 0 12px rgba(34, 197, 94, 0.3),
+      inset 0 0 15px rgba(34, 197, 94, 0.05),
+      0 8px 32px rgba(34, 197, 94, 0.12);
+  }
+}
+
+@keyframes messageError {
+  0%, 100% {
+    box-shadow: 
+      0 0 16px rgba(239, 68, 68, 0.4),
+      inset 0 0 20px rgba(239, 68, 68, 0.1),
+      0 8px 32px rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    box-shadow: 
+      0 0 24px rgba(239, 68, 68, 0.5),
+      inset 0 0 25px rgba(239, 68, 68, 0.15),
+      0 12px 40px rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.75);
+  }
+}
+
+/* Voice message timeline animation */
+@keyframes waveform {
+  0%, 100% {
+    transform: scaleY(0.6);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.message-sending {
+  animation: messagePulsing 1.5s ease-in-out infinite;
+}
+
+.message-sent {
+  animation: messageSent 0.4s ease-out;
+}
+
+.message-read {
+  animation: messageRead 0.4s ease-out;
+}
+
+.message-error {
+  animation: messageError 1.5s ease-in-out infinite;
+}
+
+/* Waveform bars for voice messages */
+.voice-waveform-bar {
+  animation: waveform 0.6s ease-in-out infinite;
+}
+
+/* Smooth backdrop blur - Apple style */
+.glass-effect {
+  backdrop-filter: blur(10px) saturate(1.8);
+  -webkit-backdrop-filter: blur(10px) saturate(1.8);
+}
+
+/* Enhanced shadow utilities for Apple UI */
+.shadow-apple-xs {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-apple-sm {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.shadow-apple {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.shadow-apple-lg {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Progress bar styling */
+.voice-progress-track {
+  background: linear-gradient(90deg, 
+    rgba(200, 200, 200, 0.3) 0%,
+    rgba(200, 200, 200, 0.1) 50%,
+    rgba(200, 200, 200, 0.3) 100%);
+  border-radius: 4px;
+  height: 4px;
+}
+
+.voice-progress-fill {
+  background: linear-gradient(90deg, #3b82f6, #1e40af);
+  border-radius: 4px;
+  height: 100%;
+  transition: width 0.1s linear;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+input:focus,
+button:focus,
+textarea:focus {
+  outline: none;
+}

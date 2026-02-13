@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: fars-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build:api && npx prisma generate && npx prisma migrate deploy
+    startCommand: npm run start:api
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fars-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://fars-web.onrender.com
+      - key: REDIS_URL
+        value: redis://localhost:6379
+
+  - type: web
+    name: fars-web
+    runtime: static
+    plan: free
+    buildCommand: npm install && npm run build:web
+    staticPublishPath: apps/web/dist
+    routes:
+      - path: /
+        destination: /index.html
+      - path: /:path*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://fars-api.onrender.com/api
+      - key: VITE_WS_URL
+        value: https://fars-api.onrender.com
+
+databases:
+  - name: fars-db
+    databaseName: fars
+    user: fars
+    plan: free

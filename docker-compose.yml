@@ -1,0 +1,49 @@
+# Локальная разработка: PostgreSQL + Redis (опционально MinIO для файлов)
+# (атрибут version в новых Docker Compose не нужен и игнорируется)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fars
+      POSTGRES_PASSWORD: fars
+      POSTGRES_DB: fars
+      # MINIMUM connections to prevent exhaustion - development only!
+      POSTGRES_INITDB_ARGS: "-c max_connections=15 -c shared_buffers=64MB"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fars -d fars"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Раскомментировать для локальной загрузки файлов (S3-совместимое хранилище)
+  # minio:
+  #   image: minio/minio:latest
+  #   command: server /data
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   volumes:
+  #     - minio_data:/data
+
+volumes:
+  postgres_data:
+  # minio_data:
