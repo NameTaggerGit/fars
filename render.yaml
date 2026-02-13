@@ -3,7 +3,7 @@ services:
     name: fars-api
     runtime: node
     plan: free
-    buildCommand: cd apps/api && npm install && npx nest build
+    buildCommand: cd apps/api && npm install && npm run build
     startCommand: npm run start:api
     envVars:
       - key: NODE_ENV
