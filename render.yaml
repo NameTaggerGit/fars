@@ -6,9 +6,7 @@ services:
     buildCommand: |
       cd apps/api && \
       npm install && \
-      npx @nestjs/cli build && \
-      npm run prisma:generate && \
-      npm run prisma:migrate
+      npx @nestjs/cli build
     startCommand: npm run start:api
     envVars:
       - key: NODE_ENV

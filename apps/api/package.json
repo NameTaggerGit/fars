@@ -7,8 +7,8 @@
     "dev": "nest start --watch",
     "start": "node dist/main",
     "start:prod": "node dist/main",
-    "prisma:generate": "npx prisma generate",
-    "prisma:migrate": "npx prisma migrate deploy",
+    "prisma:generate": "node ./node_modules/.bin/prisma generate",
+    "prisma:migrate": "node ./node_modules/.bin/prisma migrate deploy",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
